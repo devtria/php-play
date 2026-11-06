@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="id" class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PHP PLAY – Kuis Interaktif PHP</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    * { font-family: 'Poppins', sans-serif; }
+
+    body {
+      background: linear-gradient(135deg, #0f0c29 0%, #1a1a4e 50%, #24243e 100%);
+      min-height: 100vh;
+    }
+
+    /* Animated background blobs */
+    .blob {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.15;
+      pointer-events: none;
+      z-index: 0;
+      animation: floatBlob 8s ease-in-out infinite alternate;
+    }
+    .blob-1 { width: 400px; height: 400px; background: #6366f1; top: -100px; left: -100px; animation-delay: 0s; }
+    .blob-2 { width: 350px; height: 350px; background: #8b5cf6; bottom: -80px; right: -80px; animation-delay: 2s; }
+    .blob-3 { width: 250px; height: 250px; background: #3b82f6; top: 40%; left: 50%; animation-delay: 4s; }
+
+    @keyframes floatBlob {
+      0%   { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(30px, 20px) scale(1.1); }
+    }
+
+    .gradient-text {
+      background: linear-gradient(90deg, #818cf8, #c084fc, #60a5fa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(99, 102, 241, 0.6);
+    }
+    .btn-primary:active { transform: translateY(0); }
+
+    .btn-outline {
+      border: 2px solid rgba(129, 140, 248, 0.6);
+      color: #818cf8;
+      transition: all 0.3s ease;
+    }
+    .btn-outline:hover {
+      background: rgba(129, 140, 248, 0.1);
+      border-color: #818cf8;
+      transform: translateY(-2px);
+    }
+
+    .option-btn {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1.5px solid rgba(255, 255, 255, 0.12);
+      color: #e2e8f0;
+      transition: all 0.2s ease;
+      text-align: left;
+    }
+    .option-btn:hover:not(:disabled) {
+      background: rgba(99, 102, 241, 0.15);
+      border-color: #6366f1;
+      transform: translateX(4px);
+    }
+    .option-btn:disabled { cursor: not-allowed; }
+
+    .option-correct {
+      background: rgba(34, 197, 94, 0.2) !important;
+      border-color: #22c55e !important;
+      color: #86efac !important;
+    }
+    .option-wrong {
+      background: rgba(239, 68, 68, 0.2) !important;
+      border-color: #ef4444 !important;
+      color: #fca5a5 !important;
+    }
+
+    .progress-bar-fill {
+      transition: width 0.5s ease;
+      background: linear-gradient(90deg, #6366f1, #8b5cf6);
+    }
+
+    .score-circle {
+      width: 160px;
+      height: 160px;
+      border-radius: 50%;
+      background: conic-gradient(#6366f1 var(--pct, 0%), rgba(255,255,255,0.08) 0%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      box-shadow: 0 0 40px rgba(99, 102, 241, 0.3);
+    }
+    .score-circle::before {
+      content: '';
+      position: absolute;
+      inset: 12px;
+      border-radius: 50%;
+      background: #1a1a4e;
+    }
+    .score-inner {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+    }
+
+    .explanation-box {
+      background: rgba(99, 102, 241, 0.1);
+      border-left: 3px solid #6366f1;
+    }
+
+    @keyframes fadeSlideIn {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .animate-in { animation: fadeSlideIn 0.4s ease forwards; }
+
+    .tag-badge {
+      background: rgba(99, 102, 241, 0.2);
+      border: 1px solid rgba(99, 102, 241, 0.4);
+      color: #a5b4fc;
+      font-size: 0.65rem;
+      padding: 2px 10px;
+      border-radius: 999px;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.4); border-radius: 3px; }
+  </style>
+</head>
+<body class="min-h-screen text-white relative overflow-x-hidden">
+
+  <!-- Background Blobs -->
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+
+  <!-- ========== SCREEN A: LANDING ========== -->
+  <div id="screen-landing" class="relative z-10 min-h-screen flex flex-col items-center justify-center px-4 py-16">
+    <div class="max-w-lg w-full text-center animate-in">
+
+      <!-- Logo / Icon -->
+      <div class="inline-flex items-center justify-center w-20 h-20 rounded-2xl mb-6 card shadow-lg">
+        <span class="text-4xl">🐘</span>
+      </div>
+
+      <!-- Title -->
+      <h1 class="text-7xl font-black tracking-tight gradient-text mb-4 leading-none">
+        PHP<br/>PLAY
+      </h1>
+
+      <div class="flex justify-center gap-2 mb-6 flex-wrap">
+        <span class="tag-badge">100 Soal</span>
+        <span class="tag-badge">20 Ronde</span>
+        <span class="tag-badge">Bahasa Indonesia</span>
+      </div>
+
+      <!-- Description -->
+      <p class="text-slate-300 text-base leading-relaxed mb-10 max-w-sm mx-auto">
+        Belajar PHP tanpa stres. Uji pemahamanmu dari materi dasar hingga
+        <strong class="text-indigo-300">Object-Oriented Programming</strong>
+        melalui kuis interaktif.
+      </p>
+
+      <!-- Topics Preview -->
+      <div class="card rounded-2xl p-5 mb-8 text-left">
+        <p class="text-xs text-slate-400 uppercase tracking-widest mb-3 font-semibold">Topik yang Diujikan</p>
+        <div class="grid grid-cols-2 gap-y-2 gap-x-4">
+          <div class="flex items-center gap-2 text-sm text-slate-300"><span class="text-indigo-400">✦</span> Sintaks Dasar</div>
+          <div class="flex items-center gap-2 text-sm text-slate-300"><span class="text-indigo-400">✦</span> Variabel & Tipe Data</div>
+          <div class="flex items-center gap-2 text-sm text-slate-300"><span class="text-indigo-400">✦</span> Operator</div>
+          <div class="flex items-center gap-2 text-sm text-slate-300"><span class="text-indigo-400">✦</span> Kontrol Alur</div>
+          <div class="flex items-center gap-2 text-sm text-slate-300"><span class="text-indigo-400">✦</span> Perulangan</div>
+          <div class="flex items-center gap-2 text-sm text-slate-300"><span class="text-indigo-400">✦</span> Array</div>
+          <div class="flex items-center gap-2 text-sm text-slate-300"><span class="text-indigo-400">✦</span> Fungsi</div>
+          <div class="flex items-center gap-2 text-sm text-slate-300"><span class="text-indigo-400">✦</span> Superglobal</div>
+          <div class="flex items-center gap-2 text-sm text-slate-300"><span class="text-indigo-400">✦</span> OOP Dasar</div>
+          <div class="flex items-center gap-2 text-sm text-slate-300"><span class="text-indigo-400">✦</span> OOP Lanjutan</div>
+        </div>
+      </div>
+
+      <!-- Buttons -->
+      <div class="flex flex-col gap-3">
+        <button id="btn-start"
+          class="btn-primary w-full py-4 rounded-2xl font-bold text-lg text-white tracking-wide">
+          🚀 &nbsp;Main Sekarang
+        </button>
+        <div class="btn-outline w-full py-3 rounded-2xl font-semibold text-sm cursor-pointer">
+          <a href="https://devtria.github.io/devtria-portfolio/" target="_blank"
+            class="block w-full text-center">
+            👨‍💻 &nbsp;Tentang Pembuat
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ========== SCREEN B: QUIZ ========== -->
+  <div id="screen-quiz" class="hidden relative z-10 min-h-screen flex flex-col items-center justify-start px-4 py-10">
+    <div class="max-w-2xl w-full">
+
+      <!-- Header -->
+      <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center gap-3">
+          <span class="text-2xl">🐘</span>
+          <span class="font-bold text-lg gradient-text">PHP PLAY</span>
+        </div>
+        <div id="question-counter" class="text-sm font-semibold text-slate-400 card px-4 py-2 rounded-full">
+          Pertanyaan 1 dari 20
+        </div>
+      </div>
+
+      <!-- Progress Bar -->
+      <div class="w-full h-2 bg-white/10 rounded-full mb-6 overflow-hidden">
+        <div id="progress-bar" class="progress-bar-fill h-full rounded-full" style="width: 5%;"></div>
+      </div>
+
+      <!-- Question Card -->
+      <div class="card rounded-3xl p-6 md:p-8 mb-4 animate-in">
+        <p class="text-xs text-indigo-400 uppercase tracking-widest font-semibold mb-3">Pertanyaan</p>
+        <p id="question-text" class="text-white text-lg md:text-xl font-semibold leading-relaxed mb-6">
+          Loading...
+        </p>
+
+        <!-- Options -->
+        <div class="flex flex-col gap-3">
+          <button id="opt-A" onclick="handleAnswer('A')"
+            class="option-btn w-full px-5 py-4 rounded-2xl font-medium text-sm md:text-base">
+            A. ...
+          </button>
+          <button id="opt-B" onclick="handleAnswer('B')"
+            class="option-btn w-full px-5 py-4 rounded-2xl font-medium text-sm md:text-base">
+            B. ...
+          </button>
+          <button id="opt-C" onclick="handleAnswer('C')"
+            class="option-btn w-full px-5 py-4 rounded-2xl font-medium text-sm md:text-base">
+            C. ...
+          </button>
+          <button id="opt-D" onclick="handleAnswer('D')"
+            class="option-btn w-full px-5 py-4 rounded-2xl font-medium text-sm md:text-base">
+            D. ...
+          </button>
+        </div>
+      </div>
+
+      <!-- Explanation Block -->
+      <div id="explanation-block" class="hidden explanation-box rounded-2xl p-5 mb-4 animate-in">
+        <div class="flex items-start gap-3">
+          <span class="text-indigo-400 text-xl mt-0.5 flex-shrink-0">💡</span>
+          <div>
+            <p class="text-xs text-indigo-300 font-semibold uppercase tracking-wider mb-1">Penjelasan</p>
+            <p id="explanation-text" class="text-slate-200 text-sm leading-relaxed"></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Next Button -->
+      <button id="btn-next" onclick="nextQuestion()"
+        class="hidden btn-primary w-full py-4 rounded-2xl font-bold text-base text-white">
+        Selanjutnya &nbsp;→
+      </button>
+
+    </div>
+  </div>
+
+  <!-- ========== SCREEN C: RESULT ========== -->
+  <div id="screen-result" class="hidden relative z-10 min-h-screen flex flex-col items-center justify-center px-4 py-16">
+    <div class="max-w-md w-full text-center animate-in">
+
+      <!-- Trophy Icon -->
+      <div class="text-6xl mb-6" id="result-emoji">🏆</div>
+
+      <!-- Score Circle -->
+      <div class="flex justify-center mb-6">
+        <div class="score-circle" id="score-circle">
+          <div class="score-inner">
+            <div id="score-display" class="text-4xl font-black text-white leading-none"></div>
+            <div class="text-xs text-slate-400 font-medium">skor</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Result Message -->
+      <h2 id="result-title" class="text-2xl font-bold gradient-text mb-2">Luar Biasa!</h2>
+      <p class="text-slate-300 text-base mb-2">Terima Kasih Sudah Bermain.</p>
+      <p id="result-message" class="text-slate-400 text-sm mb-8 leading-relaxed"></p>
+
+      <!-- Stats Card -->
+      <div class="card rounded-2xl p-5 mb-8 grid grid-cols-3 gap-4 text-center">
+        <div>
+          <p id="stat-correct" class="text-2xl font-bold text-green-400">0</p>
+          <p class="text-xs text-slate-400 mt-1">Benar</p>
+        </div>
+        <div class="border-x border-white/10">
+          <p id="stat-wrong" class="text-2xl font-bold text-red-400">0</p>
+          <p class="text-xs text-slate-400 mt-1">Salah</p>
+        </div>
+        <div>
+          <p id="stat-pct" class="text-2xl font-bold text-indigo-400">0%</p>
+          <p class="text-xs text-slate-400 mt-1">Akurasi</p>
+        </div>
+      </div>
+
+      <!-- Buttons -->
+      <div class="flex flex-col gap-3">
+        <button id="btn-replay"
+          class="btn-primary w-full py-4 rounded-2xl font-bold text-base text-white">
+          🔄 &nbsp;Main Lagi
+        </button>
+        <button id="btn-home"
+          class="btn-outline w-full py-3 rounded-2xl font-semibold text-sm">
+          🏠 &nbsp;Kembali ke Halaman Utama
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
